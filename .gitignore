@@ -1,0 +1,23 @@
+# Private planning and local work
+.scratch/
+
+# Dependencies and build output
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+.vercel/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and local tooling
+*.log
+.DS_Store
+
+# Test artifacts
+playwright-report/
+test-results/

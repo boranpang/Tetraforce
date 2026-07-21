@@ -1,0 +1,3 @@
+# Use a managed Next.js and Supabase stack for the MVP
+
+Tetraforce MVP will use a public monorepo containing a Next.js full-stack web application hosted on Vercel, Supabase Postgres and Auth with GitHub OAuth, a TypeScript npm CLI requiring Node.js 22+, shared API contracts, and database migrations. This favors rapid delivery, protocol consistency, auditability, and low operational overhead over repository-level secrecy or infrastructure portability; game settlement remains server-authoritative and transactionally enforced in Postgres, hidden gameplay parameters stay in production environment configuration, and MVP administration uses the Supabase dashboard instead of a custom back office.

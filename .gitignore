@@ -16,6 +16,7 @@ coverage/
 
 # Logs and local tooling
 *.log
+*.tsbuildinfo
 .DS_Store
 
 # Test artifacts

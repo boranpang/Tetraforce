@@ -22,6 +22,20 @@ workspace.
 Architecture decisions live in `docs/adr/`. Project terminology lives in
 `CONTEXT.md`.
 
+## Local development
+
+Use Node.js 24 and npm 11. Copy `apps/web/.env.example` to
+`apps/web/.env.local`, then provide private guest-state configuration before
+starting the web app.
+
+```sh
+npm install
+npm run dev
+```
+
+Run `npm run typecheck`, `npm test`, and `npm run test:e2e` for the Ticket 01
+verification suite. The Collector package remains compatible with Node.js 22+.
+
 ## License
 
 Tetraforce is licensed under the MIT License.

@@ -1,0 +1,1 @@
+export const COLLECTOR_MINIMUM_NODE_MAJOR = 22;

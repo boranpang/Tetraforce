@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { GuestOnboarding } from "../../src/components/guest-onboarding";
+import { SiteFooter } from "../../src/components/site-footer";
 import { copy, isLocale } from "../../src/i18n";
 
 export default async function TemplePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -36,6 +37,7 @@ export default async function TemplePage({ params }: { params: Promise<{ locale:
       </section>
 
       <GuestOnboarding locale={locale} />
+      <SiteFooter locale={locale} />
     </main>
   );
 }

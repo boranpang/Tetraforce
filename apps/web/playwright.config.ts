@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const localChromeChannel = process.env.CI ? undefined : "chrome";
+const testPort = process.env.TETRAFORCE_E2E_PORT ?? "3100";
+const testBaseUrl = `http://127.0.0.1:${testPort}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -8,18 +10,20 @@ export default defineConfig({
   retries: 0,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: testBaseUrl,
     channel: localChromeChannel,
     trace: "retain-on-failure"
   },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100/en",
+    command: `npm run dev -- --hostname 127.0.0.1 --port ${testPort}`,
+    url: `${testBaseUrl}/en`,
     reuseExistingServer: false,
     env: {
       TETRAFORCE_GUEST_STATE_SECRET:
         "playwright-only-secret-with-at-least-32-characters",
-      TETRAFORCE_GUEST_ALLOCATION_RULES: "[]"
+      TETRAFORCE_GUEST_ALLOCATION_RULES: "[]",
+      TETRAFORCE_NEXT_DIST_DIR: ".next-playwright",
+      TETRAFORCE_SUPPORT_EMAIL: "support@tetraforce.example"
     }
   },
   projects: [

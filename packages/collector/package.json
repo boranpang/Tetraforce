@@ -1,16 +1,31 @@
 {
   "name": "tetraforce",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Privacy-minimized local usage preview for Tetraforce",
+  "license": "MIT",
   "type": "module",
-  "exports": "./src/index.ts",
+  "bin": {
+    "tetraforce": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/cli.js",
+    "prepack": "npm run build",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "@tetraforce/contracts": "*",
+    "@types/node": "24.10.1",
+    "esbuild": "0.28.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }

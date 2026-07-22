@@ -34,7 +34,20 @@ npm run dev
 ```
 
 Run `npm run typecheck`, `npm test`, and `npm run test:e2e` for the Ticket 01
-verification suite. The Collector package remains compatible with Node.js 22+.
+verification suite.
+
+## Collector preview
+
+On macOS or Linux with Node.js 22+, preview the privacy-minimized Claude Code
+and Codex Usage Summaries before any upload:
+
+```sh
+npx tetraforce show-data
+```
+
+The command scans both supported Agents, includes only the current UTC hour and
+previous 23 hours, and prints the complete pending JSON. Native Windows is not
+supported, and there is no manual Token entry or log-file upload fallback.
 
 ## License
 

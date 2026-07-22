@@ -6,21 +6,23 @@ import type { Attributes, GuestState } from "@tetraforce/contracts";
 
 import { getGuestConfig } from "../../../../src/server/guest-config";
 import {
+  GUEST_COOKIE_MAX_AGE_SECONDS,
+  GUEST_COOKIE_NAME
+} from "../../../../src/server/guest-cookie";
+import {
   createGuestState,
   openGuestState,
   sealGuestState,
   settleGuestState
 } from "../../../../src/server/guest-state";
 
-const COOKIE_NAME = "tetraforce_guest";
-const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 const adjectives = ["Brave", "Quiet", "Swift", "Bright", "Kind", "Bold"];
 const animals = ["Moth", "Fox", "Hare", "Owl", "Lynx", "Crane"];
 
 export async function GET() {
   const config = getGuestConfig();
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const token = cookieStore.get(GUEST_COOKIE_NAME)?.value;
 
   if (token) {
     try {
@@ -40,7 +42,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const config = getGuestConfig();
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const token = cookieStore.get(GUEST_COOKIE_NAME)?.value;
 
   if (!token) {
     return NextResponse.json({ error: "Guest state is missing." }, { status: 400 });
@@ -71,11 +73,11 @@ function createNewGuestState(): GuestState {
 }
 
 function withGuestCookie(response: NextResponse, guest: GuestState, secret: string) {
-  response.cookies.set(COOKIE_NAME, sealGuestState(guest, secret), {
+  response.cookies.set(GUEST_COOKIE_NAME, sealGuestState(guest, secret), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: COOKIE_MAX_AGE_SECONDS,
+    maxAge: GUEST_COOKIE_MAX_AGE_SECONDS,
     path: "/"
   });
   return response;

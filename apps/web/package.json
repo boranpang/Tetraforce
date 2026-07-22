@@ -13,12 +13,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.8",
     "@tetraforce/contracts": "*",
     "next": "16.2.11",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "unicode-case-folding": "^1.1.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.4",
     "@playwright/test": "1.61.1",
     "@types/node": "24.10.1",
     "@types/react": "19.2.14",

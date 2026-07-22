@@ -249,7 +249,32 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 
 .ready-state strong { color: var(--gold); font-family: "Courier New", monospace; font-size: 1.25rem; }
 .ready-state p { color: var(--muted); }
+.binding-panel { margin-top: 26px; padding-top: 24px; border-top: 2px solid #4b4564; }
+.binding-panel h3 { margin: 0 0 10px; color: var(--paper); font-family: "Courier New", monospace; font-size: 1rem; }
+.binding-panel > p { margin: 0 0 18px; line-height: 1.55; }
+.binding-panel .pixel-button { display: inline-flex; width: auto; align-items: center; justify-content: center; text-decoration: none; }
+.binding-panel form { display: grid; gap: 16px; }
+.binding-disclosure { margin: 0 0 20px; padding: 14px 16px; border: 2px solid #4b4564; background: #1a182b; }
+.binding-disclosure strong { color: var(--gold); font-family: inherit; font-size: 0.92rem; }
+.binding-disclosure ul { margin: 10px 0 0; padding-left: 20px; color: #ddd5c4; font-size: 0.82rem; line-height: 1.5; }
+.binding-disclosure li + li { margin-top: 5px; }
+.binding-name { display: grid; gap: 8px; }
+.binding-name > span { color: var(--paper); font-weight: 700; }
+.binding-name input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 3px solid #0c0b12;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+}
+.binding-name small { color: var(--muted); line-height: 1.45; }
+.binding-consent { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; color: #ddd5c4; font-size: 0.88rem; line-height: 1.55; }
+.binding-consent input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--gold); }
+.binding-consent a { color: var(--gold); text-underline-offset: 3px; }
 .error-message { color: #ff9a91; margin: 20px 0 0; }
+.binding-callback-error { width: min(720px, calc(100% - 40px)); margin: 0 auto 24px; padding: 12px 16px; border: 2px solid #8f423f; background: #3b2028; color: #ffb2aa; text-align: center; }
 .system-message { width: min(720px, calc(100% - 40px)); margin: 80px auto; text-align: center; color: var(--muted); }
 
 .confirm-dialog {
@@ -293,6 +318,7 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
   .allocation-controls button { width: 32px; height: 32px; }
   .allocation-footer { align-items: stretch; flex-direction: column; }
   .pixel-button { width: 100%; }
+  .binding-panel .pixel-button { width: 100%; }
   .dialog-actions { flex-direction: column-reverse; }
   .legal-header { grid-template-columns: 1fr auto; gap: 12px; padding: 14px 18px; }
   .legal-header .back-link { grid-column: 1 / -1; grid-row: 2; font-size: 0.82rem; }

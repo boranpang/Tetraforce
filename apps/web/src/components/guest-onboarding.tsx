@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ATTRIBUTE_KEYS, type Attributes, type GuestState } from "@tetraforce/contracts";
+import type { IncompleteBindingStatus } from "../binding-contract";
 import { copy, type Locale } from "../i18n";
+import type { PersistentCharacter } from "../server/binding-service";
+import { CharacterBinding } from "./character-binding";
+import { AttributeDisplay, CharacterHeading, TempleScene } from "./character-presentation";
 
 const EMPTY_ALLOCATION: Attributes = {
   courage: 0,
@@ -20,7 +24,15 @@ async function readGuestResponse(response: Response, fallbackMessage: string) {
   return body;
 }
 
-export function GuestOnboarding({ locale }: { locale: Locale }) {
+export function GuestOnboarding({
+  bindingStatus,
+  locale,
+  onActivated
+}: {
+  bindingStatus: IncompleteBindingStatus;
+  locale: Locale;
+  onActivated(character: PersistentCharacter): void;
+}) {
   const text = copy[locale];
   const [guest, setGuest] = useState<GuestState | null>(null);
   const [allocation, setAllocation] = useState<Attributes>(EMPTY_ALLOCATION);
@@ -108,22 +120,11 @@ export function GuestOnboarding({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section className="temple-scene" aria-labelledby="character-name">
-      <div className="goddess-stage" aria-label={text.goddess}>
-        <div className="goddess-sigil" aria-hidden="true"><span>✦</span></div>
-        <p>{text.goddess}</p>
-      </div>
-
-      <div className="character-panel">
-        <div className="character-heading">
-          <div className="character-badge" aria-hidden="true">
-            {ATTRIBUTE_KEYS.map((attribute) => <span key={attribute} className={attribute} />)}
-          </div>
-          <div>
-            <h2 id="character-name">{guest.name}</h2>
-            <p>{guest.status === "allocating" ? text.guidance : text.readyBody}</p>
-          </div>
-        </div>
+    <TempleScene locale={locale}>
+        <CharacterHeading
+          description={guest.status === "allocating" ? text.guidance : text.readyBody}
+          name={guest.name}
+        />
 
         <div className="attributes">
           {ATTRIBUTE_KEYS.map((attribute) => {
@@ -131,17 +132,9 @@ export function GuestOnboarding({ locale }: { locale: Locale }) {
               guest.attributes[attribute] +
               (guest.status === "allocating" ? allocation[attribute] : 0);
             return (
-              <div className={`attribute ${attribute}`} role="group" aria-label={text.attributes[attribute]} key={attribute}>
-                <div className="attribute-label">
-                  <span>{text.attributes[attribute]}</span>
-                  <strong aria-label={`${text.attributes[attribute]} ${preview}`}>{preview}</strong>
-                </div>
-                <div className="attribute-bars" aria-hidden="true">
-                  {Array.from({ length: preview }, (_, index) => (
-                    <span className={index >= guest.attributes[attribute] ? "preview" : undefined} key={index} />
-                  ))}
-                </div>
-                {guest.status === "allocating" ? (
+              <AttributeDisplay
+                attribute={attribute}
+                controls={guest.status === "allocating" ? (
                   <div className="allocation-controls">
                     <button
                       type="button"
@@ -156,8 +149,12 @@ export function GuestOnboarding({ locale }: { locale: Locale }) {
                       disabled={remaining === 0}
                     >+</button>
                   </div>
-                ) : null}
-              </div>
+                ) : undefined}
+                existingValue={guest.attributes[attribute]}
+                key={attribute}
+                label={text.attributes[attribute]}
+                value={preview}
+              />
             );
           })}
         </div>
@@ -175,16 +172,21 @@ export function GuestOnboarding({ locale }: { locale: Locale }) {
             </button>
           </div>
         ) : (
-          <div className="ready-state" role="status">
-            <strong>{text.ready}</strong>
-            <p>{text.offeringHint}</p>
+          <div className="ready-state">
+            <div role="status">
+              <strong>{text.ready}</strong>
+              <p>{text.offeringHint}</p>
+            </div>
             <button className="pixel-button primary" type="button" disabled>{text.offer}</button>
+            <CharacterBinding
+              locale={locale}
+              status={bindingStatus}
+              onActivated={onActivated}
+            />
           </div>
         )}
 
         {error ? <p className="error-message" role="alert">{error}</p> : null}
-      </div>
-
       <dialog
         className="confirm-dialog"
         ref={dialogRef}
@@ -203,6 +205,6 @@ export function GuestOnboarding({ locale }: { locale: Locale }) {
           </button>
         </div>
       </dialog>
-    </section>
+    </TempleScene>
   );
 }

@@ -47,19 +47,39 @@ export function AttributeDisplay({
   label: string;
   value: number;
 }) {
+  const displayedBars = Math.min(value, 20);
+  const previewBars =
+    existingValue === undefined ? 0 : Math.min(value - existingValue, 20);
+  const previewStartsAt = Math.max(0, displayedBars - previewBars);
+
   return (
     <div className={`attribute ${attribute}`} role="group" aria-label={label}>
       <div className="attribute-label">
         <span>{label}</span>
         <strong aria-label={`${label} ${value}`}>{value}</strong>
       </div>
-      <div className="attribute-bars" aria-hidden="true">
-        {Array.from({ length: Math.min(value, 20) }, (_, index) => (
-          <span
-            className={existingValue !== undefined && index >= existingValue ? "preview" : undefined}
-            key={index}
-          />
-        ))}
+      <div className="attribute-meter" aria-hidden="true">
+        <div className="attribute-bars">
+          {value === 0 ? (
+            <span className="empty-slot" />
+          ) : (
+            Array.from({ length: displayedBars }, (_, index) => (
+              <span
+                className={
+                  previewBars > 0 && index >= previewStartsAt
+                    ? "preview"
+                    : undefined
+                }
+                key={index}
+              />
+            ))
+          )}
+        </div>
+        {value > 20 ? (
+          <span className="attribute-overflow">
+            +{value - 20}
+          </span>
+        ) : null}
       </div>
       {controls}
     </div>

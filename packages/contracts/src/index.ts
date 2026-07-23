@@ -24,5 +24,6 @@ export type AllocationRule = {
 };
 
 export * from "./device-binding";
+export * from "./offering";
 export * from "./usage-sync";
 export * from "./usage-summary";

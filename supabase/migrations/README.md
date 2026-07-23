@@ -9,6 +9,9 @@ limit, short-lived pending activation, and 90-day inactivity expiry.
 Ticket 07 adds private cumulative hourly Usage Summaries, database-enforced
 reported/consumed totals, device-authenticated idempotent sync, Eligible Token
 aggregation, and owner-scoped Temple sync state.
+Ticket 09 adds private idempotent Offering records, serialized Usage Summary
+consumption, persistent Blessing allocation, rolling cooldown, ranking
+aggregates, and attained-at timestamps.
 
 The Web server requires `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the backend-only
@@ -16,3 +19,6 @@ The Web server requires `NEXT_PUBLIC_SUPABASE_URL`,
 Device binding also requires a private
 `TETRAFORCE_DEVICE_SECRET_PEPPER` containing at least 32 characters. Only
 domain-separated HMAC digests are persisted.
+Blessing settlement also requires private
+`TETRAFORCE_BLESSING_POINT_WEIGHTS` JSON. The environment example intentionally
+contains no production values.

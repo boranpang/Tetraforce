@@ -85,6 +85,34 @@ export const copy = {
       unavailable: "Collector status is temporarily unavailable.",
       ready: "Eligible Tokens are ready for a future Offering."
     },
+    offering: {
+      confirmTitle: "Offer all Eligible Tokens?",
+      confirmTokens: (tokens: string) =>
+        `The current server snapshot contains ${tokens} Eligible Tokens.`,
+      irreversible:
+        "Confirming is irreversible and consumes every Eligible Token available when the transaction settles.",
+      cancel: "Cancel",
+      confirm: "Offer Tokens",
+      processing: "Offering...",
+      failure:
+        "The result is uncertain. Retry this same Offering or refresh to recover it.",
+      stateFailure: "Temple state could not be refreshed. Try again.",
+      blessing: "Blessing",
+      result: (points: number, tokens: string) =>
+        `The Goddess accepted ${tokens} Tokens and granted ${points} ${points === 1 ? "point" : "points"}.`,
+      revealing: "The Goddess is revealing your fate.",
+      confirmAllocation: "Confirm Allocation",
+      allocationFailure:
+        "Your allocation was not saved. Your preview is preserved; try again.",
+      allocationComplete: "Blessing allocated.",
+      cooldown: "Next Offering",
+      cooldownReady: "Ready",
+      cooldownActive: "Cooldown is active.",
+      pending: "Allocate every Blessing point before another Offering.",
+      noTokens: "Sync new Eligible Tokens before another Offering.",
+      ready: "Your Offering is ready.",
+      loading: "Restoring Offering state..."
+    },
     attributes: {
       courage: "Courage",
       strength: "Strength",
@@ -174,6 +202,31 @@ export const copy = {
       stale: "Collector 数据已超过 90 分钟未更新，请运行 npx tetraforce sync。",
       unavailable: "暂时无法读取 Collector 状态。",
       ready: "有效 Token 可用于后续献礼。"
+    },
+    offering: {
+      confirmTitle: "献上全部有效 Token？",
+      confirmTokens: (tokens: string) =>
+        `当前服务端快照包含 ${tokens} 个有效 Token。`,
+      irreversible: "确认后不可撤销，并会消费事务结算时的全部有效 Token。",
+      cancel: "取消",
+      confirm: "献上 Token",
+      processing: "正在献礼……",
+      failure: "结果尚不确定。请重试同一次献礼，或刷新以恢复结果。",
+      stateFailure: "暂时无法刷新神殿状态，请重试。",
+      blessing: "祝福",
+      result: (points: number, tokens: string) =>
+        `女神接受了 ${tokens} 个 Token，并赐予 ${points} 点。`,
+      revealing: "女神正在揭示你的命运。",
+      confirmAllocation: "确认分配",
+      allocationFailure: "分配尚未保存。预览已保留，请重试。",
+      allocationComplete: "祝福点数已分配。",
+      cooldown: "下次献礼",
+      cooldownReady: "已就绪",
+      cooldownActive: "冷却进行中。",
+      pending: "必须先分配全部祝福点数。",
+      noTokens: "请先同步新的有效 Token。",
+      ready: "献礼已准备就绪。",
+      loading: "正在恢复献礼状态……"
     },
     attributes: {
       courage: "勇气",

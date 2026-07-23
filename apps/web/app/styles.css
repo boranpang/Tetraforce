@@ -180,7 +180,7 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 
 .goddess-sigil span { color: var(--gold); font-size: 5rem; text-shadow: 0 0 24px rgba(241, 200, 91, 0.4); }
 
-.character-panel { padding: clamp(24px, 4vw, 48px); }
+.character-panel { position: relative; padding: clamp(24px, 4vw, 48px); }
 .character-heading { display: flex; gap: 20px; align-items: center; margin-bottom: 34px; }
 .character-heading h2 { margin: 0 0 8px; font-size: clamp(1.3rem, 3vw, 1.9rem); color: var(--paper); }
 .character-heading p { margin: 0; color: var(--muted); line-height: 1.5; }
@@ -212,9 +212,20 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 .attribute.wisdom .attribute-label span { color: var(--wisdom); }
 .attribute.faith .attribute-label span { color: var(--faith); }
 
-.attribute-bars { display: flex; gap: 5px; min-height: 22px; align-items: end; }
-.attribute-bars span { width: 9px; height: 18px; background: rgba(255,255,255,0.45); }
+.attribute-meter { display: flex; min-width: 0; align-items: end; gap: 8px; }
+.attribute-bars { display: flex; flex: 1; min-width: 0; gap: 5px; min-height: 22px; align-items: end; overflow: hidden; }
+.attribute-bars span { flex: 1 1 9px; min-width: 3px; max-width: 9px; height: 18px; background: rgba(255,255,255,0.45); }
 .attribute-bars span.preview { height: 22px; background: white; }
+.attribute-bars span.empty-slot {
+  height: 18px;
+  border: 2px dashed rgba(255,255,255,0.24);
+  background: transparent;
+}
+.attribute-overflow {
+  color: var(--paper);
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+}
 
 .allocation-controls { display: flex; gap: 8px; }
 .allocation-controls button {
@@ -256,6 +267,59 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 .sync-status dt { color: var(--muted); }
 .sync-status dd { margin: 0; color: var(--paper); font-weight: 700; text-align: right; }
 .sync-warning { margin: 16px 0 0; padding-left: 12px; border-left: 4px solid var(--gold); color: #f4d98d; line-height: 1.5; }
+.sync-warning p { margin: 0; }
+.inline-retry {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  color: var(--gold);
+  background: transparent;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.blessing-result {
+  display: grid;
+  gap: 24px;
+  padding: 20px;
+  border: 3px solid #76652f;
+  background: #272238;
+}
+.blessing-result h3 {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font-family: "Courier New", monospace;
+  font-size: 1.35rem;
+}
+.blessing-result p { margin: 0; color: #e7dcc4; line-height: 1.55; }
+.offering-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+.offering-reveal span {
+  color: var(--gold);
+  font-size: 5rem;
+  text-shadow: 0 0 32px rgba(241, 200, 91, 0.72);
+}
+.offering-reveal p { color: var(--paper); font-family: "Courier New", monospace; }
+.temple-content {
+  transition: opacity 180ms ease, filter 180ms ease;
+}
+.temple-content.is-dimmed {
+  opacity: 0.2;
+  filter: brightness(0.45) saturate(0.55);
+  pointer-events: none;
+}
+.temple-scene:has(.temple-content.is-dimmed) .goddess-stage {
+  filter: brightness(0.45) saturate(0.55);
+}
+.allocation-success { color: var(--gold) !important; font-weight: 800; }
 .binding-panel { margin-top: 26px; padding-top: 24px; border-top: 2px solid #4b4564; }
 .binding-panel h3 { margin: 0 0 10px; color: var(--paper); font-family: "Courier New", monospace; font-size: 1rem; }
 .binding-panel > p { margin: 0 0 18px; line-height: 1.55; }
@@ -288,6 +352,10 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 .device-code-result code { display: block; margin: 9px 0 12px; color: var(--gold); font-family: "Courier New", monospace; font-size: clamp(1.15rem, 4vw, 1.55rem); font-weight: 800; letter-spacing: 0.08em; }
 .device-code-result p { margin: 6px 0 0; color: #ddd5c4; font-size: 0.86rem; line-height: 1.5; }
 .error-message { color: #ff9a91; margin: 20px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .temple-content { transition: none; }
+}
 .binding-callback-error { width: min(720px, calc(100% - 40px)); margin: 0 auto 24px; padding: 12px 16px; border: 2px solid #8f423f; background: #3b2028; color: #ffb2aa; text-align: center; }
 .system-message { width: min(720px, calc(100% - 40px)); margin: 80px auto; text-align: center; color: var(--muted); }
 
@@ -349,5 +417,11 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 
 @media (prefers-reduced-motion: no-preference) {
   .goddess-sigil span { animation: breathe 2.4s steps(4, end) infinite; }
+  .offering-reveal span { animation: offering-flash 1.2s steps(5, end); }
   @keyframes breathe { 50% { transform: scale(1.08); } }
+  @keyframes offering-flash {
+    0% { opacity: 0.15; transform: scale(0.7); }
+    50% { opacity: 1; transform: scale(1.18); }
+    100% { opacity: 0.72; transform: scale(1); }
+  }
 }

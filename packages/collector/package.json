@@ -1,7 +1,7 @@
 {
   "name": "tetraforce",
   "version": "0.1.0",
-  "description": "Privacy-minimized local usage preview for Tetraforce",
+  "description": "Privacy-minimized local usage Collector for Tetraforce",
   "license": "MIT",
   "type": "module",
   "bin": {

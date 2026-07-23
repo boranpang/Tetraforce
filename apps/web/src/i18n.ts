@@ -55,6 +55,24 @@ export const copy = {
       persistentReady: "Your persistent Character is ready.",
       collectorLater: "Connect a Collector before your first Offering."
     },
+    collector: {
+      title: "Connect Collector",
+      body: "Create a short-lived, one-time code. Enter it only in the official Tetraforce Collector.",
+      create: "Create Device Code",
+      creating: "Creating...",
+      codeLabel: "One-time Device Code",
+      expires: (date: Date) =>
+        `Expires at ${date.toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short"
+        })}.`,
+      command: (origin: string) =>
+        `Then run: TETRAFORCE_API_URL=${origin} npx tetraforce init`,
+      limit:
+        "Five active devices are already connected. Run npx tetraforce unlink on one connected device, then try again.",
+      failure: "A Device Code could not be created. Try again."
+    },
     attributes: {
       courage: "Courage",
       strength: "Strength",
@@ -114,6 +132,24 @@ export const copy = {
       verified: "GitHub 已验证",
       persistentReady: "你的持久角色已准备就绪。",
       collectorLater: "完成 Collector 连接后才能进行首次献礼。"
+    },
+    collector: {
+      title: "连接 Collector",
+      body: "生成短时一次性设备码，并且只在官方 Tetraforce Collector 中输入。",
+      create: "生成设备码",
+      creating: "正在生成……",
+      codeLabel: "一次性设备码",
+      expires: (date: Date) =>
+        `有效期至 ${date.toLocaleTimeString("zh-CN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short"
+        })}。`,
+      command: (origin: string) =>
+        `然后运行：TETRAFORCE_API_URL=${origin} npx tetraforce init`,
+      limit:
+        "已连接五台活跃设备。请先在一台已连接设备上运行 npx tetraforce unlink，再重试。",
+      failure: "暂时无法生成设备码，请重试。"
     },
     attributes: {
       courage: "勇气",

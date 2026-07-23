@@ -23,4 +23,5 @@ export type AllocationRule = {
   adjust: Attributes;
 };
 
+export * from "./device-binding";
 export * from "./usage-summary";

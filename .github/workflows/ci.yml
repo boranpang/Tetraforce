@@ -9,9 +9,25 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tetraforce_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tetraforce_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       TETRAFORCE_GUEST_STATE_SECRET: ci-only-secret-with-at-least-32-characters
       TETRAFORCE_GUEST_ALLOCATION_RULES: "[]"
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tetraforce_test
+      TETRAFORCE_POSTGRES_CONCURRENCY_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

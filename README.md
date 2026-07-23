@@ -49,6 +49,12 @@ The command scans both supported Agents, includes only the current UTC hour and
 previous 23 hours, and prints the complete pending JSON. Native Windows is not
 supported, and there is no manual Token entry or log-file upload fallback.
 
+Signed-in players can create a one-time Device Code in the Temple. The Web UI
+provides the service-specific `TETRAFORCE_API_URL=... npx tetraforce init`
+command. `init` previews the exact pending structure before confirmation, then
+stores a device-only credential with owner-only filesystem permissions. Usage
+Summary upload and scheduled sync remain separate later tickets.
+
 ## License
 
 Tetraforce is licensed under the MIT License.

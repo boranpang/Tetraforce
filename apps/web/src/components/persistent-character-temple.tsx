@@ -3,6 +3,7 @@ import { ATTRIBUTE_KEYS } from "@tetraforce/contracts";
 import type { PersistentCharacter } from "../server/binding-service";
 import { copy, type Locale } from "../i18n";
 import { AttributeDisplay, CharacterHeading, TempleScene } from "./character-presentation";
+import { DeviceCodeBinding } from "./device-code-binding";
 
 export function PersistentCharacterTemple({
   character,
@@ -34,6 +35,7 @@ export function PersistentCharacterTemple({
           <p>{text.binding.collectorLater}</p>
           <button className="pixel-button primary" type="button" disabled>{text.offer}</button>
         </div>
+        <DeviceCodeBinding locale={locale} />
     </TempleScene>
   );
 }

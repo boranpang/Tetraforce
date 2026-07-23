@@ -112,3 +112,32 @@ test("an existing GitHub identity restores the server Character without loading 
   await expect(page.getByRole("group", { name: "信心" })).toContainText("5");
   expect(guestRequests).toBe(0);
 });
+
+test("a persistent player creates a private one-time Device Code from the Temple", async ({
+  page
+}) => {
+  let deviceCodeRequests = 0;
+  await page.route("**/api/v1/character/binding", (route) =>
+    route.fulfill({ json: { status: "active", character: restoredCharacter } })
+  );
+  await page.route("**/api/v1/device-codes", async (route) => {
+    deviceCodeRequests += 1;
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postData()).toBeNull();
+    await route.fulfill({
+      headers: { "cache-control": "no-store" },
+      json: {
+        deviceCode: "2345-6789-ABCD",
+        expiresAt: "2026-07-23T11:10:00.000Z"
+      }
+    });
+  });
+
+  await page.goto("/en");
+  const collector = page.getByRole("region", { name: "Connect Collector" });
+  await collector.getByRole("button", { name: "Create Device Code" }).click();
+
+  await expect(collector.getByText("2345-6789-ABCD")).toBeVisible();
+  await expect(collector.getByText("npx tetraforce init")).toBeVisible();
+  expect(deviceCodeRequests).toBe(1);
+});

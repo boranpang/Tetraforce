@@ -10,6 +10,9 @@
     "apps/*",
     "packages/*"
   ],
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "1.1.5"
+  },
   "scripts": {
     "dev": "npm run dev --workspace @tetraforce/web",
     "test": "npm run test --workspaces --if-present",

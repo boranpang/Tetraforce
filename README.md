@@ -52,8 +52,10 @@ supported, and there is no manual Token entry or log-file upload fallback.
 Signed-in players can create a one-time Device Code in the Temple. The Web UI
 provides the service-specific `TETRAFORCE_API_URL=... npx tetraforce init`
 command. `init` previews the exact pending structure before confirmation, then
-stores a device-only credential with owner-only filesystem permissions. Usage
-Summary upload and scheduled sync remain separate later tickets.
+stores a device-only credential with owner-only filesystem permissions and
+performs one immediate sync. Run `npx tetraforce sync` for another immediate
+sync; unchanged cumulative data sends no upload request. Automatic scheduling
+remains a later ticket.
 
 ## License
 

@@ -40,7 +40,7 @@ describe("Collector Usage Summary", () => {
           outputTokens: 50,
           cacheReadTokens: 100,
           cacheWriteTokens: 0,
-          collectorVersion: "0.1.0",
+          collectorVersion: "1.0.0",
           sourceLogFormatVersion: "codex-rollout-v1"
         },
         {
@@ -51,7 +51,7 @@ describe("Collector Usage Summary", () => {
           outputTokens: 30,
           cacheReadTokens: 40,
           cacheWriteTokens: 10,
-          collectorVersion: "0.1.0",
+          collectorVersion: "1.0.0",
           sourceLogFormatVersion: "claude-code-jsonl-v1"
         },
         {
@@ -62,7 +62,7 @@ describe("Collector Usage Summary", () => {
           outputTokens: 50,
           cacheReadTokens: 100,
           cacheWriteTokens: 0,
-          collectorVersion: "0.1.0",
+          collectorVersion: "1.0.0",
           sourceLogFormatVersion: "codex-rollout-v1"
         },
         {
@@ -73,7 +73,7 @@ describe("Collector Usage Summary", () => {
           outputTokens: 5,
           cacheReadTokens: 2,
           cacheWriteTokens: 3,
-          collectorVersion: "0.1.0",
+          collectorVersion: "1.0.0",
           sourceLogFormatVersion: "claude-code-jsonl-v1"
         },
         {
@@ -84,7 +84,7 @@ describe("Collector Usage Summary", () => {
           outputTokens: 60,
           cacheReadTokens: 100,
           cacheWriteTokens: 0,
-          collectorVersion: "0.1.0",
+          collectorVersion: "1.0.0",
           sourceLogFormatVersion: "codex-rollout-v1"
         }
       ]
@@ -168,6 +168,36 @@ describe("Collector Usage Summary", () => {
     expect(result.summaries[0]).toMatchObject({
       utcHour: "2026-07-21T11:00Z",
       inputTokens: 11
+    });
+  });
+
+  it("uses the connected device history boundary instead of a rolling 24-hour window", async () => {
+    const temporaryRoot = await mkdtemp(`${tmpdir()}/tetraforce-device-window-`);
+    temporaryDirectories.push(temporaryRoot);
+    const claudeRoot = `${temporaryRoot}/claude/projects/sample`;
+    await mkdir(claudeRoot, { recursive: true });
+    await writeFile(
+      `${claudeRoot}/history.jsonl`,
+      [
+        claudeLine("2026-07-20T10:00:00.000Z", "before-device", 100),
+        claudeLine("2026-07-20T11:00:00.000Z", "device-boundary", 25)
+      ].join("\n")
+    );
+
+    const result = await collectUsage({
+      now: new Date("2026-07-22T10:30:00.000Z"),
+      earliestAcceptedUtcHour: "2026-07-20T11:00:00.000Z",
+      roots: {
+        claudeCode: `${temporaryRoot}/claude/projects`,
+        codex: `${temporaryRoot}/missing`
+      },
+      summaryKeyFor: async () => "device-boundary-key"
+    });
+
+    expect(result.summaries).toHaveLength(1);
+    expect(result.summaries[0]).toMatchObject({
+      utcHour: "2026-07-20T11:00Z",
+      inputTokens: 25
     });
   });
 });

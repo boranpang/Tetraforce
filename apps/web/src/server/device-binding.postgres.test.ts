@@ -30,9 +30,9 @@ describePostgres("Collector device binding on PostgreSQL", () => {
       drop schema public cascade;
       create schema public;
       create schema auth;
-      create role anon noinherit;
-      create role authenticated noinherit;
-      create role service_role noinherit bypassrls;
+      do $$ begin create role anon noinherit; exception when duplicate_object then null; end $$;
+      do $$ begin create role authenticated noinherit; exception when duplicate_object then null; end $$;
+      do $$ begin create role service_role noinherit bypassrls; exception when duplicate_object then null; end $$;
       grant usage on schema public to anon, authenticated, service_role;
       create table auth.users (id uuid primary key);
       create table auth.identities (

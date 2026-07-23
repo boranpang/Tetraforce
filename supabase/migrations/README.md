@@ -6,6 +6,9 @@ mappings, Consent records, owner-only RLS, and an atomic binding function.
 Ticket 06 adds private one-time Device Codes, revocable Collector devices,
 server-fixed initial UTC-hour boundaries, a five-active-device transaction
 limit, short-lived pending activation, and 90-day inactivity expiry.
+Ticket 07 adds private cumulative hourly Usage Summaries, database-enforced
+reported/consumed totals, device-authenticated idempotent sync, Eligible Token
+aggregation, and owner-scoped Temple sync state.
 
 The Web server requires `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the backend-only

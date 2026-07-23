@@ -249,6 +249,13 @@ nav button small { max-width: 180px; font-family: Inter, ui-sans-serif, system-u
 
 .ready-state strong { color: var(--gold); font-family: "Courier New", monospace; font-size: 1.25rem; }
 .ready-state p { color: var(--muted); }
+.sync-status { margin-top: 28px; padding: 18px; border: 2px solid #4b4564; background: #1a182b; }
+.sync-status h3 { margin: 0 0 14px; color: var(--paper); font-family: "Courier New", monospace; font-size: 1rem; }
+.sync-status dl { display: grid; gap: 10px; margin: 0; }
+.sync-status dl > div { display: flex; justify-content: space-between; gap: 16px; }
+.sync-status dt { color: var(--muted); }
+.sync-status dd { margin: 0; color: var(--paper); font-weight: 700; text-align: right; }
+.sync-warning { margin: 16px 0 0; padding-left: 12px; border-left: 4px solid var(--gold); color: #f4d98d; line-height: 1.5; }
 .binding-panel { margin-top: 26px; padding-top: 24px; border-top: 2px solid #4b4564; }
 .binding-panel h3 { margin: 0 0 10px; color: var(--paper); font-family: "Courier New", monospace; font-size: 1rem; }
 .binding-panel > p { margin: 0 0 18px; line-height: 1.55; }

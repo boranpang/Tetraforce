@@ -141,4 +141,76 @@ describe("Collector device API", () => {
       }
     );
   });
+
+  it("uploads only the approved summaries with device authentication and CLI version", async () => {
+    const credential =
+      `tf_d1.ABCDEFGHIJKLMNOPQRSTUV.${"q".repeat(43)}`;
+    const summaries = [
+      {
+        summaryKey: "a".repeat(43),
+        agent: "codex" as const,
+        utcHour: "2026-07-22T10:00Z",
+        inputTokens: 12,
+        outputTokens: 3,
+        cacheReadTokens: 4,
+        cacheWriteTokens: 0,
+        collectorVersion: "1.0.0",
+        sourceLogFormatVersion: "codex-rollout-v1"
+      }
+    ];
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        acceptedSummaries: 1,
+        eligibleTokens: "19",
+        lastSuccessfulSyncAt: "2026-07-22T10:30:00.000Z"
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createDeviceApi("https://service.example").syncUsageSummaries(
+        credential,
+        summaries
+      )
+    ).resolves.toEqual({
+      acceptedSummaries: 1,
+      eligibleTokens: "19",
+      lastSuccessfulSyncAt: "2026-07-22T10:30:00.000Z"
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://service.example/api/v1/usage-summaries",
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${credential}`,
+          "content-type": "application/json",
+          "x-tetraforce-cli-version": "1.0.0"
+        },
+        body: JSON.stringify(summaries),
+        redirect: "error"
+      }
+    );
+  });
+
+  it("maps an unsupported CLI major to actionable upgrade guidance", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            code: "COLLECTOR_UPGRADE_REQUIRED",
+            error: "Upgrade required."
+          },
+          { status: 426 }
+        )
+      )
+    );
+
+    await expect(
+      createDeviceApi("https://service.example").syncUsageSummaries(
+        `tf_d1.ABCDEFGHIJKLMNOPQRSTUV.${"q".repeat(43)}`,
+        []
+      )
+    ).rejects.toMatchObject({ reason: "upgrade" });
+  });
 });

@@ -18,6 +18,14 @@ import { DeviceApiError } from "./device-api";
 
 const fixtures = fileURLToPath(new URL("../test/fixtures", import.meta.url));
 const temporaryDirectories: string[] = [];
+const syncUsageSummaries = async (
+  _credential: string,
+  summaries: readonly UsageSummary[]
+) => ({
+  acceptedSummaries: summaries.length,
+  eligibleTokens: "0",
+  lastSuccessfulSyncAt: "2026-07-22T10:30:00.000Z"
+});
 
 afterEach(async () => {
   await Promise.all(
@@ -128,6 +136,7 @@ describe("init command", () => {
     const credential =
       `tf_d1.ABCDEFGHIJKLMNOPQRSTUV.${"s".repeat(43)}`;
     const calls: unknown[] = [];
+    let uploaded: readonly UsageSummary[] = [];
     const prompts: string[] = [];
     let stdout = "";
     let stderr = "";
@@ -144,6 +153,11 @@ describe("init command", () => {
       deviceApi: {
         activateDeviceCredential: async () => "activated" as const,
         revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries: async (_credential, summaries) => {
+          uploaded = summaries;
+          calls.push({ summaries: summaries.length });
+          return syncUsageSummaries(_credential, summaries);
+        },
         exchangeDeviceCode: async (deviceCode) => {
           calls.push({ deviceCode });
           return {
@@ -169,12 +183,17 @@ describe("init command", () => {
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
     expect(stdout).toContain("Usage Summaries ready: 5");
-    expect(readPendingJson(stdout)).toHaveLength(5);
+    const previewed = readPendingJson(stdout);
+    expect(previewed).toHaveLength(5);
+    expect(uploaded).toEqual(previewed);
     expect(prompts).toEqual([
       expect.stringContaining("Authorize this device"),
       expect.stringContaining("one-time Device Code")
     ]);
-    expect(calls).toEqual([{ deviceCode: "2345-6789-ABCD" }]);
+    expect(calls).toEqual([
+      { deviceCode: "2345-6789-ABCD" },
+      { summaries: 5 }
+    ]);
 
     const credentialFile = `${stateDirectory}/device-credential.json`;
     const stored = JSON.parse(await readFile(credentialFile, "utf8")) as {
@@ -209,6 +228,7 @@ describe("init command", () => {
       deviceApi: {
         activateDeviceCredential: async () => "activated" as const,
         revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries,
         exchangeDeviceCode: async () => {
           apiCalls += 1;
           throw new Error("must not be called");
@@ -236,6 +256,7 @@ describe("init command", () => {
     const stateDirectory = await mkdtemp(`${tmpdir()}/tetraforce-empty-init-`);
     temporaryDirectories.push(stateDirectory);
     const exchangeInputs: unknown[] = [];
+    let uploads = 0;
     let stdout = "";
 
     const exitCode = await runCli(["init"], {
@@ -250,6 +271,10 @@ describe("init command", () => {
       deviceApi: {
         activateDeviceCredential: async () => "activated" as const,
         revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries: async (...arguments_) => {
+          uploads += 1;
+          return syncUsageSummaries(...arguments_);
+        },
         exchangeDeviceCode: async (deviceCode) => {
           exchangeInputs.push({ deviceCode });
           return {
@@ -272,6 +297,7 @@ describe("init command", () => {
     expect(stdout).toContain("Usage Summaries ready: 0");
     expect(readPendingJson(stdout)).toEqual([]);
     expect(exchangeInputs).toEqual([{ deviceCode: "CDEF-GHJK-MNPQ" }]);
+    expect(uploads).toBe(0);
   });
 
   it("refuses a symbolic-link credential path before exchanging a code", async () => {
@@ -295,6 +321,7 @@ describe("init command", () => {
       deviceApi: {
         activateDeviceCredential: async () => "activated" as const,
         revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries,
         exchangeDeviceCode: async () => {
           apiCalls += 1;
           throw new Error("must not be called");
@@ -336,6 +363,7 @@ describe("init command", () => {
         deviceApi: {
           activateDeviceCredential: async () => "activated" as const,
           revokeDeviceCredential: async () => "revoked" as const,
+          syncUsageSummaries,
           exchangeDeviceCode: async () => {
             throw new DeviceApiError(reason);
           }
@@ -376,6 +404,7 @@ describe("init command", () => {
           return "activated" as const;
         },
         revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries,
         exchangeDeviceCode: async () => {
           apiCalls += 1;
           return {
@@ -447,7 +476,8 @@ describe("init command", () => {
           }
           return "activated" as const;
         },
-        revokeDeviceCredential: async () => "revoked" as const
+        revokeDeviceCredential: async () => "revoked" as const,
+        syncUsageSummaries
       },
       prompt: {
         confirm: async () => {
@@ -485,7 +515,8 @@ describe("init command", () => {
       revokeDeviceCredential: async (value: string) => {
         revoked.push(value);
         return "revoked" as const;
-      }
+      },
+      syncUsageSummaries
     };
     const prompt = {
       confirm: async () => true,
@@ -567,7 +598,8 @@ describe("init command", () => {
         revokeDeviceCredential: async (value) => {
           revoked.push(value);
           return "revoked";
-        }
+        },
+        syncUsageSummaries
       },
       prompt: {
         confirm: async () => true,

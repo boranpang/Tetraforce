@@ -73,6 +73,18 @@ export const copy = {
         "Five active devices are already connected. Run npx tetraforce unlink on one connected device, then try again.",
       failure: "A Device Code could not be created. Try again."
     },
+    sync: {
+      title: "Collector status",
+      eligible: "Eligible Tokens",
+      connection: "Connection",
+      connected: "Connected",
+      disconnected: "Not connected",
+      lastSync: "Last data sync",
+      never: "No data synced yet",
+      stale: "Collector data is more than 90 minutes old. Run npx tetraforce sync.",
+      unavailable: "Collector status is temporarily unavailable.",
+      ready: "Eligible Tokens are ready for a future Offering."
+    },
     attributes: {
       courage: "Courage",
       strength: "Strength",
@@ -150,6 +162,18 @@ export const copy = {
       limit:
         "已连接五台活跃设备。请先在一台已连接设备上运行 npx tetraforce unlink，再重试。",
       failure: "暂时无法生成设备码，请重试。"
+    },
+    sync: {
+      title: "Collector 状态",
+      eligible: "有效 Token",
+      connection: "连接状态",
+      connected: "已连接",
+      disconnected: "未连接",
+      lastSync: "最后数据同步",
+      never: "尚未同步数据",
+      stale: "Collector 数据已超过 90 分钟未更新，请运行 npx tetraforce sync。",
+      unavailable: "暂时无法读取 Collector 状态。",
+      ready: "有效 Token 可用于后续献礼。"
     },
     attributes: {
       courage: "勇气",

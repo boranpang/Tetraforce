@@ -1,5 +1,6 @@
 import {
   assertUsageSummary,
+  isUtcHour,
   type UsageAgent,
   type UsageSummary
 } from "@tetraforce/contracts";
@@ -27,6 +28,7 @@ export type SummaryKeyFactory = (
 
 export type CollectUsageOptions = {
   now: Date;
+  earliestAcceptedUtcHour?: string;
   roots: UsageRoots;
   summaryKeyFor: SummaryKeyFactory;
 };
@@ -43,7 +45,9 @@ export async function collectUsage(options: CollectUsageOptions): Promise<Collec
   }
 
   const currentHour = floorToUtcHour(now);
-  const windowStart = currentHour - 23 * HOUR_MILLISECONDS;
+  const windowStart = options.earliestAcceptedUtcHour
+    ? parseHistoryBoundary(options.earliestAcceptedUtcHour, currentHour)
+    : currentHour - 23 * HOUR_MILLISECONDS;
   const scans = await Promise.all([
     scanClaudeCode(options.roots.claudeCode),
     scanCodex(options.roots.codex)
@@ -90,6 +94,17 @@ export async function collectUsage(options: CollectUsageOptions): Promise<Collec
     detectedAgents: scans.filter(({ detected }) => detected).map(({ agent }) => agent),
     summaries
   };
+}
+
+function parseHistoryBoundary(value: string, currentHour: number) {
+  if (!isUtcHour(value)) {
+    throw new Error("Collector device history boundary is invalid.");
+  }
+  const boundary = Date.parse(value);
+  if (boundary > currentHour) {
+    throw new Error("Collector device history boundary is in the future.");
+  }
+  return boundary;
 }
 
 function addCounts(target: TokenCounts, addition: TokenCounts) {

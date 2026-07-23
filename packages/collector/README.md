@@ -44,8 +44,18 @@ owner-only permissions before the server activates it. An interrupted
 activation can be resumed by running `init` again; an unpersisted pending
 device expires without occupying an active-device slot.
 
-The current `init` flow connects the device only. It does not upload Usage
-Summaries or register an automatic task.
+After activation, `init` immediately uploads the displayed non-empty Usage
+Summaries. It does not register an automatic task.
+
+## Sync now
+
+```sh
+npx tetraforce sync
+```
+
+`sync` scans from the server-issued device history boundary through the current
+UTC hour and uploads only new or increased cumulative summaries. If nothing
+changed after the last successful upload, it sends no upload request.
 
 ## Disconnect this device
 
@@ -54,8 +64,8 @@ npx tetraforce unlink
 ```
 
 `unlink` asks for confirmation, revokes only this device credential, and then
-removes the local credential and device-scoped secret. It does not delete the
-Character or affect other connected devices. If five devices are already
+removes the local credential, device-scoped secret, and sync state. It does not
+delete the Character or affect other connected devices. If five devices are already
 active, run this command on one connected device before creating a new Device
 Code.
 

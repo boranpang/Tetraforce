@@ -1,8 +1,14 @@
 import {
+  COLLECTOR_VERSION_HEADER,
   type DeviceBindingErrorResponse,
   type DeviceCodeExchangeResponse,
+  type UsageSummary,
+  type UsageSyncErrorResponse,
+  type UsageSyncResponse,
   isUtcHour
 } from "@tetraforce/contracts";
+
+import { COLLECTOR_VERSION } from "./version";
 
 const DEVICE_CREDENTIAL_PATTERN =
   /^tf_d1\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/;
@@ -15,6 +21,10 @@ export type DeviceApi = {
   revokeDeviceCredential(
     deviceCredential: string
   ): Promise<"revoked" | "already-invalid">;
+  syncUsageSummaries(
+    deviceCredential: string,
+    summaries: readonly UsageSummary[]
+  ): Promise<UsageSyncResponse>;
 };
 
 export function createDeviceApi(apiBaseUrl: string): DeviceApi {
@@ -79,8 +89,66 @@ export function createDeviceApi(apiBaseUrl: string): DeviceApi {
         deviceCredential,
         "revoked"
       );
+    },
+    async syncUsageSummaries(deviceCredential, summaries) {
+      let response: Response;
+      try {
+        response = await fetch(`${baseUrl}/api/v1/usage-summaries`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${deviceCredential}`,
+            "content-type": "application/json",
+            [COLLECTOR_VERSION_HEADER]: COLLECTOR_VERSION
+          },
+          body: JSON.stringify(summaries),
+          redirect: "error"
+        });
+      } catch {
+        throw new DeviceApiError("unavailable");
+      }
+
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch {
+        throw new DeviceApiError("unavailable");
+      }
+      if (!response.ok) {
+        throw new DeviceApiError(syncErrorReason(body));
+      }
+
+      const result = body as Partial<UsageSyncResponse>;
+      if (
+        !Number.isSafeInteger(result.acceptedSummaries) ||
+        Number(result.acceptedSummaries) < 0 ||
+        typeof result.eligibleTokens !== "string" ||
+        !/^(0|[1-9]\d*)$/.test(result.eligibleTokens) ||
+        typeof result.lastSuccessfulSyncAt !== "string" ||
+        Number.isNaN(Date.parse(result.lastSuccessfulSyncAt))
+      ) {
+        throw new DeviceApiError("unavailable");
+      }
+      return result as UsageSyncResponse;
     }
   };
+}
+
+function syncErrorReason(body: unknown): DeviceApiError["reason"] {
+  const code = (body as Partial<UsageSyncErrorResponse>)?.code;
+  switch (code) {
+    case "DEVICE_CREDENTIAL_INVALID":
+      return "credential";
+    case "COLLECTOR_UPGRADE_REQUIRED":
+      return "upgrade";
+    case "USAGE_COUNTER_ROLLBACK":
+      return "rollback";
+    case "USAGE_WINDOW_INVALID":
+      return "window";
+    case "USAGE_SUMMARIES_INVALID":
+      return "invalid-data";
+    default:
+      return "unavailable";
+  }
 }
 
 async function credentialAction<T extends "activated" | "revoked">(
@@ -124,7 +192,16 @@ async function credentialAction<T extends "activated" | "revoked">(
 
 export class DeviceApiError extends Error {
   constructor(
-    readonly reason: "invalid-code" | "limit" | "rate-limit" | "unavailable"
+    readonly reason:
+      | "invalid-code"
+      | "limit"
+      | "rate-limit"
+      | "credential"
+      | "upgrade"
+      | "rollback"
+      | "window"
+      | "invalid-data"
+      | "unavailable"
   ) {
     super("Collector device binding request failed.");
     this.name = "DeviceApiError";

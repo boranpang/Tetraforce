@@ -11,10 +11,14 @@ import {
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
-import type { DeviceCodeExchangeResponse } from "@tetraforce/contracts";
+import {
+  isUtcHour,
+  type DeviceCodeExchangeResponse
+} from "@tetraforce/contracts";
 
 const CREDENTIAL_FILE_NAME = "device-credential.json";
 const DEVICE_SCOPE_SECRET_FILE_NAME = "device-scope-secret";
+const SYNC_STATE_FILE_NAME = "sync-state.json";
 const DEVICE_CREDENTIAL_PATTERN =
   /^tf_d1\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/;
 
@@ -65,7 +69,8 @@ export function createDeviceCredentialStore(
         typeof value.apiBaseUrl !== "string" ||
         typeof value.deviceCredential !== "string" ||
         !DEVICE_CREDENTIAL_PATTERN.test(value.deviceCredential) ||
-        typeof value.earliestAcceptedUtcHour !== "string"
+        typeof value.earliestAcceptedUtcHour !== "string" ||
+        !isUtcHour(value.earliestAcceptedUtcHour)
       ) {
         throw new Error("Collector credential file is invalid.");
       }
@@ -110,6 +115,13 @@ export function createDeviceCredentialStore(
       }
       await unlink(credentialFile);
       await unlink(join(stateDirectory, DEVICE_SCOPE_SECRET_FILE_NAME)).catch(
+        (error: unknown) => {
+          if (!hasCode(error, "ENOENT")) {
+            throw error;
+          }
+        }
+      );
+      await unlink(join(stateDirectory, SYNC_STATE_FILE_NAME)).catch(
         (error: unknown) => {
           if (!hasCode(error, "ENOENT")) {
             throw error;

@@ -13,6 +13,7 @@ import {
 } from "./device-credential-store";
 import { createTerminalPrompt, type CollectorPrompt } from "./prompt";
 import { createLocalSummaryKeyFactory } from "./summary-key";
+import { createSyncStateStore, type SyncStateStore } from "./sync-state";
 import {
   collectUsage,
   type SummaryKeyFactory,
@@ -32,6 +33,7 @@ export type RunCliOptions = {
   apiBaseUrl?: string;
   deviceApi?: DeviceApi;
   credentialStore?: DeviceCredentialStore;
+  syncStateStore?: SyncStateStore;
   prompt?: CollectorPrompt;
   stdout?: TextWriter;
   stderr?: TextWriter;
@@ -51,9 +53,9 @@ export async function runCli(
 
   if (
     arguments_.length !== 1 ||
-    !["show-data", "init", "unlink"].includes(arguments_[0] ?? "")
+    !["show-data", "init", "sync", "unlink"].includes(arguments_[0] ?? "")
   ) {
-    stderr.write("Usage: npx tetraforce <init|show-data|unlink>\n");
+    stderr.write("Usage: npx tetraforce <init|sync|show-data|unlink>\n");
     return 2;
   }
 
@@ -77,6 +79,8 @@ export async function runCli(
       options.stateDirectory ?? defaultStateDirectory(platform, homeDirectory);
     const credentialStore =
       options.credentialStore ?? createDeviceCredentialStore(stateDirectory);
+    const syncStateStore =
+      options.syncStateStore ?? createSyncStateStore(stateDirectory);
 
     if (arguments_[0] === "unlink") {
       if (!(await credentialStore.hasCredential())) {
@@ -105,6 +109,53 @@ export async function runCli(
     const roots = options.roots ?? defaultRoots(homeDirectory);
     const summaryKeyFor =
       options.summaryKeyFor ?? createLocalSummaryKeyFactory(stateDirectory);
+
+    if (arguments_[0] === "sync") {
+      if (!(await credentialStore.hasCredential())) {
+        stderr.write(
+          "This Collector is not connected. Run npx tetraforce init first.\n"
+        );
+        return 1;
+      }
+      const connection = await credentialStore.load();
+      await syncConnectedDevice({
+        connection,
+        roots,
+        summaryKeyFor,
+        syncStateStore,
+        deviceApi: options.deviceApi ?? createDeviceApi(connection.apiBaseUrl),
+        now: options.now ?? new Date(),
+        stdout
+      });
+      return 0;
+    }
+
+    if (
+      arguments_[0] === "init" &&
+      await credentialStore.hasCredential()
+    ) {
+      const existing = await credentialStore.load();
+      const existingApi =
+        options.deviceApi ?? createDeviceApi(existing.apiBaseUrl);
+      const activation = await existingApi.activateDeviceCredential(
+        existing.deviceCredential
+      );
+      if (activation === "activated") {
+        await syncConnectedDevice({
+          connection: existing,
+          roots,
+          summaryKeyFor,
+          syncStateStore,
+          deviceApi: existingApi,
+          now: options.now ?? new Date(),
+          stdout
+        });
+        stdout.write("\nCollector connection confirmed. No scheduled task was registered.\n");
+        return 0;
+      }
+      await credentialStore.remove();
+    }
+
     const result = await collectUsage({
       now: options.now ?? new Date(),
       roots,
@@ -116,26 +167,10 @@ export async function runCli(
       return 0;
     }
 
-    if (await credentialStore.hasCredential()) {
-      const existing = await credentialStore.load();
-      const existingApi =
-        options.deviceApi ?? createDeviceApi(existing.apiBaseUrl);
-      const activation = await existingApi.activateDeviceCredential(
-        existing.deviceCredential
-      );
-      if (activation === "activated") {
-        stdout.write(
-          "\nCollector connection confirmed. No Usage Summaries were uploaded and no scheduled task was registered.\n"
-        );
-        return 0;
-      }
-      await credentialStore.remove();
-    }
-
     const prompt = options.prompt ?? createTerminalPrompt();
     const confirmed = await prompt.confirm(
-      "Authorize this device for future Usage Summary uploads? " +
-      "This setup does not upload data or register a scheduled task."
+      "Authorize this device and immediately upload the displayed Usage Summaries? " +
+      "This setup does not register a scheduled task."
     );
     if (!confirmed) {
       stdout.write(
@@ -176,9 +211,18 @@ export async function runCli(
       await credentialStore.remove();
       throw new DeviceApiError("invalid-code");
     }
-    stdout.write(
-      "\nCollector connected. No Usage Summaries were uploaded and no scheduled task was registered.\n"
-    );
+    await uploadCollectedSummaries({
+      connection: {
+        version: 1,
+        apiBaseUrl,
+        ...connection
+      },
+      summaries: result.summaries,
+      syncStateStore,
+      deviceApi,
+      stdout
+    });
+    stdout.write("\nCollector connected. No scheduled task was registered.\n");
     return 0;
   } catch (error) {
     if (error instanceof DeviceApiError) {
@@ -188,10 +232,58 @@ export async function runCli(
     stderr.write(
       arguments_[0] === "show-data"
         ? "Tetraforce could not read local Agent usage. Check local log permissions and try again.\n"
-        : "Tetraforce Collector setup could not be completed. Check local file permissions and service configuration, then try again.\n"
+        : arguments_[0] === "sync"
+          ? "Tetraforce could not sync Usage Summaries. Check local files and network, then try again.\n"
+          : "Tetraforce Collector setup could not be completed. Check local file permissions and service configuration, then try again.\n"
     );
     return 1;
   }
+}
+
+async function syncConnectedDevice(input: {
+  connection: Awaited<ReturnType<DeviceCredentialStore["load"]>>;
+  roots: UsageRoots;
+  summaryKeyFor: SummaryKeyFactory;
+  syncStateStore: SyncStateStore;
+  deviceApi: DeviceApi;
+  now: Date;
+  stdout: TextWriter;
+}) {
+  const collected = await collectUsage({
+    now: input.now,
+    earliestAcceptedUtcHour: input.connection.earliestAcceptedUtcHour,
+    roots: input.roots,
+    summaryKeyFor: input.summaryKeyFor
+  });
+  await uploadCollectedSummaries({
+    connection: input.connection,
+    summaries: collected.summaries,
+    syncStateStore: input.syncStateStore,
+    deviceApi: input.deviceApi,
+    stdout: input.stdout
+  });
+}
+
+async function uploadCollectedSummaries(input: {
+  connection: Awaited<ReturnType<DeviceCredentialStore["load"]>>;
+  summaries: Awaited<ReturnType<typeof collectUsage>>["summaries"];
+  syncStateStore: SyncStateStore;
+  deviceApi: DeviceApi;
+  stdout: TextWriter;
+}) {
+  const changed = await input.syncStateStore.selectChanged(input.summaries);
+  if (changed.length === 0) {
+    input.stdout.write("\nNo new Usage Summary data. No upload request was sent.\n");
+    return;
+  }
+  const result = await input.deviceApi.syncUsageSummaries(
+    input.connection.deviceCredential,
+    changed
+  );
+  await input.syncStateStore.recordSuccess(changed);
+  input.stdout.write(
+    `\nSynced ${result.acceptedSummaries} Usage Summaries. Eligible Tokens: ${result.eligibleTokens}.\n`
+  );
 }
 
 function printUsagePreview(
@@ -221,6 +313,16 @@ function deviceApiErrorMessage(error: DeviceApiError) {
       return "This Character already has five active devices. Run npx tetraforce unlink on one connected device, then create a new code and try again.\n";
     case "rate-limit":
       return "Too many device requests were made. Wait before trying again.\n";
+    case "credential":
+      return "This device credential is invalid, revoked, or expired. Run npx tetraforce init to reconnect.\n";
+    case "upgrade":
+      return "This Collector version is no longer supported. Run npx tetraforce@latest init --upgrade.\n";
+    case "rollback":
+      return "Usage Summary counters moved backward. Restore the original Agent logs or reconnect this Collector.\n";
+    case "window":
+      return "Usage Summary hours are outside this device's accepted history window.\n";
+    case "invalid-data":
+      return "Usage Summary data is invalid and was not uploaded.\n";
     case "unavailable":
       return "Tetraforce could not connect this Collector. Check the service address and network, then try again.\n";
   }

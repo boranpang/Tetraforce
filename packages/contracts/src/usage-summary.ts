@@ -115,7 +115,11 @@ export function assertUsageSummary(value: unknown): asserts value is UsageSummar
   const keys = Object.keys(summary);
   if (
     keys.length !== USAGE_SUMMARY_KEYS.length ||
-    !keys.every((key, index) => key === USAGE_SUMMARY_KEYS[index])
+    !keys.every((key) =>
+      USAGE_SUMMARY_KEYS.includes(
+        key as (typeof USAGE_SUMMARY_KEYS)[number]
+      )
+    )
   ) {
     throw new Error("Usage Summary fields do not match the approved allowlist.");
   }
